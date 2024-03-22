@@ -9,9 +9,9 @@ namespace TodoAppWebApi.Controllers
     [ApiController]
     public class TodoItemModelsController : ControllerBase
     {
-        private readonly ApplicationDbContext _dbContext;
+        private readonly IApplicationDbContext _dbContext;
 
-        public TodoItemModelsController(ApplicationDbContext context)
+        public TodoItemModelsController(IApplicationDbContext context)
         {
             _dbContext = context;
         }

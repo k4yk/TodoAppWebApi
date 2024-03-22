@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace DataAccess
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         public DbSet<TodoItemModel> ToDos { get; set; }
 
@@ -17,6 +17,11 @@ namespace DataAccess
         {
             ChangeTracker.DetectChanges();
             return base.SaveChangesAsync(cancellationToken);
+        }
+
+        public override EntityEntry Entry(object entity)
+        {
+            return base.Entry(entity);
         }
     }
 }
