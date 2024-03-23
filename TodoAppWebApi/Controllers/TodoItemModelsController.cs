@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using DataAccess;
 using DataAccess.Entities;
+using DataAccess.Repositories;
+using System.Data.Entity.Core;
 
 namespace TodoAppWebApi.Controllers
 {
@@ -9,65 +9,56 @@ namespace TodoAppWebApi.Controllers
     [ApiController]
     public class TodoItemModelsController : ControllerBase
     {
-        private readonly IApplicationDbContext _dbContext;
+        private readonly ITodoItemRepository _repository;
 
-        public TodoItemModelsController(IApplicationDbContext context)
+        public TodoItemModelsController(ITodoItemRepository repository)
         {
-            _dbContext = context;
+            _repository = repository;
         }
 
         // GET: api/TodoItemModels
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TodoItemModel>>> GetToDos()
         {
-          if (_dbContext.ToDos == null)
-          {
-              return NotFound();
-          }
-            return await _dbContext.ToDos.ToListAsync();
+            try
+            {
+                return new ActionResult<IEnumerable<TodoItemModel>>(await _repository.GetAllItems());
+            }
+            catch (ObjectNotFoundException)
+            {
+
+                return NotFound();
+            }
         }
 
-        // GET: api/TodoItemModels/5
+        // GET: api/TodoItemModels/1
         [HttpGet("{id}")]
         public async Task<ActionResult<TodoItemModel>> GetTodoItemModel(int id)
         {
-          if (_dbContext.ToDos == null)
-          {
-              return NotFound();
-          }
-            var todoItemModel = await _dbContext.ToDos.FindAsync(id);
-
-            if (todoItemModel == null)
+            try
+            {
+                return await _repository.GetById(id);
+            }
+            catch (ObjectNotFoundException)
             {
                 return NotFound();
             }
-
-            return todoItemModel;
         }
 
-        // PUT: api/TodoItemModels/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // PUT: api/TodoItemModels/1
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTodoItemModel(int id, TodoItemModel todoItemModel)
         {
-            if (id != todoItemModel.Id)
-            {
-                return BadRequest();
-            }
-
-            _dbContext.Entry(todoItemModel).State = EntityState.Modified;
-
             try
             {
-                await _dbContext.SaveChangesAsync();
+                await _repository.ModifyItemById(id, todoItemModel);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception e)
             {
-                if (!TodoItemModelExists(id))
+                if (e is ObjectNotFoundException)
                 {
                     return NotFound();
-                }
-                else
+                } else
                 {
                     throw;
                 }
@@ -77,43 +68,37 @@ namespace TodoAppWebApi.Controllers
         }
 
         // POST: api/TodoItemModels
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<TodoItemModel>> PostTodoItemModel(TodoItemModel todoItemModel)
         {
-          if (_dbContext.ToDos == null)
-          {
-              return Problem("Entity set 'ApplicationDbContext.ToDos'  is null.");
-          }
-            _dbContext.ToDos.Add(todoItemModel);
-            await _dbContext.SaveChangesAsync();
+            try
+            {
+                await _repository.CreateNewItem(todoItemModel);
+            }
+            catch (Exception)
+            {
+
+                return Problem("Entity set 'ApplicationDbContext.ToDos'  is null.");
+            }
 
             return CreatedAtAction("GetTodoItemModel", new { id = todoItemModel.Id }, todoItemModel);
         }
 
-        // DELETE: api/TodoItemModels/5
+        // DELETE: api/TodoItemModels/1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTodoItemModel(int id)
         {
-            if (_dbContext.ToDos == null)
+            try
             {
-                return NotFound();
+                await _repository.DeleteItemById(id);
             }
-            var todoItemModel = await _dbContext.ToDos.FindAsync(id);
-            if (todoItemModel == null)
+            catch (ObjectNotFoundException)
             {
-                return NotFound();
-            }
 
-            _dbContext.ToDos.Remove(todoItemModel);
-            await _dbContext.SaveChangesAsync();
+                return NotFound(id);
+            }
 
             return NoContent();
-        }
-
-        private bool TodoItemModelExists(int id)
-        {
-            return (_dbContext.ToDos?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

@@ -1,4 +1,5 @@
 using DataAccess;
+using DataAccess.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 builder.Services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
+builder.Services.AddScoped<ITodoItemRepository, TodoItemRepository>();
 
 var app = builder.Build();
 
