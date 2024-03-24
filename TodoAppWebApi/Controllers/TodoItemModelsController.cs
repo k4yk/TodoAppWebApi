@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using DataAccess.Entities;
 using DataAccess.Repositories;
-using System.Data.Entity.Core;
+using DataAccess.Exceptions;
+using TodoAppWebApi.Validators;
 
 namespace TodoAppWebApi.Controllers
 {
@@ -24,7 +25,7 @@ namespace TodoAppWebApi.Controllers
             {
                 return new ActionResult<IEnumerable<TodoItemModel>>(await _repository.GetAllItems());
             }
-            catch (ObjectNotFoundException)
+            catch (DbSetNotFoundException)
             {
 
                 return NotFound();
@@ -39,7 +40,7 @@ namespace TodoAppWebApi.Controllers
             {
                 return await _repository.GetById(id);
             }
-            catch (ObjectNotFoundException)
+            catch (Exception)
             {
                 return NotFound();
             }
@@ -49,18 +50,26 @@ namespace TodoAppWebApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTodoItemModel(int id, TodoItemModel todoItemModel)
         {
+            var errors = ValidateTodoItem(todoItemModel);
+
+            if (errors.Count > 0)
+            {
+                return Ok(errors);
+            }
+
             try
             {
                 await _repository.ModifyItemById(id, todoItemModel);
             }
             catch (Exception e)
             {
-                if (e is ObjectNotFoundException)
+                switch (e)
                 {
-                    return NotFound();
-                } else
-                {
-                    throw;
+                    case EntityNotFoundException:
+                        return NotFound();
+                    case KeyMismatchException:
+                    default:
+                        return BadRequest();
                 }
             }
 
@@ -71,14 +80,21 @@ namespace TodoAppWebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<TodoItemModel>> PostTodoItemModel(TodoItemModel todoItemModel)
         {
+            var errors = ValidateTodoItem(todoItemModel);
+
+            if (errors.Count > 0)
+            {
+                return Ok(errors);
+            }
+
             try
             {
                 await _repository.CreateNewItem(todoItemModel);
             }
-            catch (Exception)
+            catch (DbSetNotFoundException)
             {
 
-                return Problem("Entity set 'ApplicationDbContext.ToDos'  is null.");
+                return NotFound();
             }
 
             return CreatedAtAction("GetTodoItemModel", new { id = todoItemModel.Id }, todoItemModel);
@@ -92,13 +108,21 @@ namespace TodoAppWebApi.Controllers
             {
                 await _repository.DeleteItemById(id);
             }
-            catch (ObjectNotFoundException)
+            catch (EntityNotFoundException)
             {
 
                 return NotFound(id);
             }
 
             return NoContent();
+        }
+
+        private List<ValidationError> ValidateTodoItem(TodoItemModel todoItemModel)
+        {
+            var validator = new TodoItemValidator();
+            var errors = validator.Validate(todoItemModel);
+
+            return errors;
         }
     }
 }

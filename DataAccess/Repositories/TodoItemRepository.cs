@@ -1,4 +1,5 @@
 ﻿using DataAccess.Entities;
+using DataAccess.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Entity.Core;
 
@@ -17,7 +18,7 @@ namespace DataAccess.Repositories
         {
             if (_dbContext.ToDos == null)
             {
-                throw new ObjectNotFoundException("");
+                throw new DbSetNotFoundException();
             }
             return await _dbContext.ToDos.ToListAsync();
         }
@@ -26,13 +27,13 @@ namespace DataAccess.Repositories
         {
             if (_dbContext.ToDos == null)
             {
-                throw new ObjectNotFoundException("");
+                throw new DbSetNotFoundException();
             }
             var todoItemModel = await _dbContext.ToDos.FindAsync(id);
 
             if (todoItemModel == null)
             {
-                throw new ObjectNotFoundException("");
+                throw new EntityNotFoundException();
             }
 
             return todoItemModel;
@@ -42,7 +43,7 @@ namespace DataAccess.Repositories
         {
             if (id != todoItemModel.Id)
             {
-                throw new Exception("");
+                throw new KeyMismatchException();
             }
 
             _dbContext.Entry(todoItemModel).State = EntityState.Modified;
@@ -55,7 +56,7 @@ namespace DataAccess.Repositories
             {
                 if (!TodoItemModelExists(id))
                 {
-                    throw new ObjectNotFoundException("");
+                    throw new EntityNotFoundException();
                 }
                 else
                 {
@@ -68,7 +69,7 @@ namespace DataAccess.Repositories
         {
             if (_dbContext.ToDos == null)
             {
-                throw new ObjectNotFoundException("Entity set 'ApplicationDbContext.ToDos'  is null.");
+                throw new DbSetNotFoundException();
             }
             _dbContext.ToDos.Add(todoItemModel);
             await _dbContext.SaveChangesAsync();
@@ -80,12 +81,12 @@ namespace DataAccess.Repositories
         {
             if (_dbContext.ToDos == null)
             {
-                throw new ObjectNotFoundException("");
+                throw new DbSetNotFoundException();
             }
             var todoItemModel = await _dbContext.ToDos.FindAsync(id);
             if (todoItemModel == null)
             {
-                throw new ObjectNotFoundException("");
+                throw new EntityNotFoundException();
             }
 
             _dbContext.ToDos.Remove(todoItemModel);
