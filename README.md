@@ -1,7 +1,7 @@
 Instructions
 
 *** Requirements ***
-Microsoft Visual Studio (.NET 7 compatible version) installed
+- Microsoft Visual Studio (.NET 7 compatible version) installed
 
 *** How to run ***
 1. Open the TodoAppWebApi.sln in Visual Studio.
