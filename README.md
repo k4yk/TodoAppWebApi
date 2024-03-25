@@ -13,7 +13,7 @@ Instructions
 - You can test from the Swagger documentation (https://localhost:5001/swagger/index.html)
 - You can test it from any web API testing platform (e.g. Postman)
 
-*** Endpoint URLs ***
+*** Endpoints ***
 - Get all todo items: GET https://localhost:5001/api/TodoItemModels
 - Get the details of 1 specific item: GET https://localhost:5001/api/TodoItemModels/{id}
 - Create new todo item: POST https://localhost:5001/api/TodoItemModels
